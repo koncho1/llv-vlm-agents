@@ -1,0 +1,51 @@
+{
+  "rainy": {
+    "temp_c": [10, 16],
+    "precipitation": "high",
+    "wind": "moderate",
+    "recommended_tags": ["rain"],
+    "notes": "Wet pavement likely; waterproof outerwear and footwear recommended."
+  },
+  "sunny": {
+    "temp_c": [22, 30],
+    "precipitation": "none",
+    "wind": "light",
+    "recommended_tags": ["sun", "hot"],
+    "notes": "Clear skies; breathable fabrics and sun protection recommended."
+  },
+  "cold": {
+    "temp_c": [-5, 5],
+    "precipitation": "low",
+    "wind": "moderate",
+    "recommended_tags": ["cold"],
+    "notes": "Near or below freezing; insulated layers recommended."
+  },
+  "hot": {
+    "temp_c": [28, 36],
+    "precipitation": "none",
+    "wind": "light",
+    "recommended_tags": ["hot", "sun"],
+    "notes": "High heat; lightweight breathable clothing recommended."
+  },
+  "snowy": {
+    "temp_c": [-10, 0],
+    "precipitation": "high",
+    "wind": "strong",
+    "recommended_tags": ["snow", "cold"],
+    "notes": "Snow accumulation likely; waterproof insulated boots and layers recommended."
+  },
+  "windy": {
+    "temp_c": [8, 18],
+    "precipitation": "low",
+    "wind": "strong",
+    "recommended_tags": ["wind"],
+    "notes": "Strong gusts likely; a windproof outer layer is recommended."
+  },
+  "mild": {
+    "temp_c": [14, 20],
+    "precipitation": "low",
+    "wind": "light",
+    "recommended_tags": ["mild"],
+    "notes": "Comfortable temperatures; light layering works well."
+  }
+}

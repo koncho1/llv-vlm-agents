@@ -16,6 +16,9 @@ dev = [
     "ruff>=0.12,<1",
 ]
 
+[project.scripts]
+outfit-planner = "agent_project.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
