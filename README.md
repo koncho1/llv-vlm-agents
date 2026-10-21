@@ -76,22 +76,3 @@ the per-run budget below the course default of 12:
 ```bash
 uv run outfit-planner --max-steps 2
 ```
-
-## Starter Code
-
-The repository contains only:
-
-- `src/agent_project/llm.py` — an OpenRouter client and a mock client. A live
-  call returns the text, tool calls, finish reason, model, provider, latency,
-  and token usage with cost. Requests time out after 60 seconds and replies are
-  limited to 1,024 tokens. If a provider returns an empty reply instead of the
-  model's answer, the client retries once on another provider.
-  `image_part(path)` adds an image to a message;
-- `src/agent_project/tracing.py` — a JSON Lines trace helper;
-- `tests/test_setup.py` — setup checks;
-- `data/` — approved project data;
-- `traces/` — generated traces, ignored by Git; and
-- `evidence/` — the traces and results you submit.
-
-The agent loop, domain tools, state, retrieval, multimodal behavior, evaluation,
-and safety controls are intentionally left for you to design and implement.
