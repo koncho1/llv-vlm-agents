@@ -11,4 +11,5 @@ build/
 *.egg-info/
 traces/*
 !traces/.gitkeep
+data/saved_outfits.json
 .cache/

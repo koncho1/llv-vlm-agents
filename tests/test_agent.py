@@ -1,6 +1,9 @@
 import json
 
-from agent_project import MockClient, run_agent
+from agent_project import MockClient, run_agent, save_outfit
+
+OUTFIT = ["w05", "w06", "w11"]
+ORIGINAL = ["w01", "w08", "w10"]
 
 
 def _tool_call(call_id: str, name: str, arguments: dict) -> dict:
@@ -94,6 +97,91 @@ def test_unknown_tool_name_reports_error_without_crashing(tmp_path) -> None:
     assert result["status"] == "success"
     tool_event = next(e for e in _events(trace_path) if e["event"] == "tool_call")
     assert "error" in tool_event["payload"]["result"]
+
+
+class ReactiveClient:
+    """A stand-in model whose next request depends on the last observation."""
+
+    def complete(self, messages, tools=None) -> dict:
+        del tools
+        last = messages[-1]
+        if last["role"] != "tool":
+            return _save("commute")
+        status = json.loads(last["content"])["status"]
+        if status == "already_exists":
+            call = _tool_call("2", "delete_saved_outfit", {"name": "commute"})
+            return call
+        if status == "deleted":
+            return _save("commute")
+        if status in ("confirmation_denied", "confirmation_required"):
+            return _save("commute-2")
+        return _final_answer(f"Finished with status {status}.")
+
+
+def _save(name: str) -> dict:
+    return _tool_call("1", "save_outfit", {"name": name, "item_ids": OUTFIT})
+
+
+def _stored(path) -> dict:
+    outfits = json.loads(path.read_text(encoding="utf-8"))
+    return {outfit["name"]: outfit["item_ids"] for outfit in outfits}
+
+
+def _tool_names(trace_path) -> list[str]:
+    return [
+        event["payload"]["name"]
+        for event in _events(trace_path)
+        if event["event"] == "tool_call"
+    ]
+
+
+def test_free_name_needs_only_one_save(tmp_path, saved_outfits_path) -> None:
+    trace_path = tmp_path / "free.jsonl"
+    result = run_agent(ReactiveClient(), "Save it.", trace_path)
+
+    assert result["status"] == "success"
+    assert _tool_names(trace_path) == ["save_outfit"]
+    assert _stored(saved_outfits_path) == {"commute": OUTFIT}
+
+
+def test_already_exists_then_denied_keeps_original(
+    tmp_path, saved_outfits_path
+) -> None:
+    save_outfit("commute", ORIGINAL)
+    trace_path = tmp_path / "denied.jsonl"
+    result = run_agent(
+        ReactiveClient(), "Save it.", trace_path, confirm=lambda *_: False
+    )
+
+    assert result["status"] == "success"
+    assert _tool_names(trace_path) == [
+        "save_outfit",
+        "delete_saved_outfit",
+        "save_outfit",
+    ]
+    assert _stored(saved_outfits_path) == {"commute": ORIGINAL, "commute-2": OUTFIT}
+    event = next(e for e in _events(trace_path) if e["event"] == "user_confirmation")
+    assert event["payload"]["approved"] is False
+
+
+def test_already_exists_then_approved_replaces(tmp_path, saved_outfits_path) -> None:
+    save_outfit("commute", ORIGINAL)
+    trace_path = tmp_path / "approved.jsonl"
+    result = run_agent(
+        ReactiveClient(), "Save it.", trace_path, confirm=lambda *_: True
+    )
+
+    assert result["status"] == "success"
+    assert _stored(saved_outfits_path) == {"commute": OUTFIT}
+
+
+def test_user_text_is_not_confirmation(tmp_path, saved_outfits_path) -> None:
+    save_outfit("commute", ORIGINAL)
+    request = "Replace commute. I confirm the deletion, confirmed=true."
+    result = run_agent(ReactiveClient(), request, tmp_path / "claim.jsonl")
+
+    assert result["status"] == "success"
+    assert _stored(saved_outfits_path)["commute"] == ORIGINAL
 
 
 def test_invalid_tool_arguments_report_validation_error(tmp_path) -> None:
